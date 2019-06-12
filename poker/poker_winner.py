@@ -19,7 +19,10 @@ class PokerWinner:
     }
 
     def find_winning_hand(self, hands):
-        return PokerWinner.high_card(self, hands)[0]
+        winning_hand = PokerWinner.pair(self, hands)
+        if winning_hand is None:
+            winning_hand = PokerWinner.high_card(self, hands)
+        return winning_hand[0]
 
     def high_card(self, hands):
         max_hand = None
@@ -37,4 +40,9 @@ class PokerWinner:
 
         return max_hand
 
-
+    def pair(self, hands):
+        for hand in hands:
+            hand_without_suits = list(map(lambda val: val[:-1], hand[1]))
+            if len(set(hand_without_suits)) < len(hand_without_suits):
+                return hand
+        return None
