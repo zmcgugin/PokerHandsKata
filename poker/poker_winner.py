@@ -18,10 +18,10 @@ class PokerWinner:
         'A': 14
     }
 
-    def find_winning_hand(hands):
-        return PokerWinner.high_card(hands)[0]
+    def find_winning_hand(self, hands):
+        return PokerWinner.high_card(self, hands)[0]
 
-    def high_card(hands):
+    def high_card(self, hands):
         max_hand = None
         max_hand_value = 0
         for hand in hands:
