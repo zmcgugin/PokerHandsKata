@@ -1,5 +1,5 @@
-
-
+from poker.result import *
+import functools
 
 class PokerWinner:
     card_values = {
@@ -18,63 +18,93 @@ class PokerWinner:
         'A': 14
     }
 
+    hand_value = {
+        'high_card': 1,
+        'pair': 2,
+        'two_pair': 3
+    }
+
     def find_winning_hand(self, hands):
-        winning_hand = PokerWinner.two_pair(hands)
-        if winning_hand is None:
-            winning_hand = PokerWinner.pair(hands)
-        if winning_hand is None:
-            winning_hand = PokerWinner.high_card(hands)
-        return winning_hand[0]
+        results = list(map(PokerWinner.parse_hands, hands))
+        return sorted(results, key=functools.cmp_to_key(PokerWinner.sort))[0].hand[0]
 
     @staticmethod
-    def high_card(hands):
-        max_hand = None
-        max_hand_value = 0
-        for hand in hands:
-            max_card_value = 0
-            for card in hand[1]:
-                current_card_value = PokerWinner.card_values[card[:-1]]
-                if current_card_value > max_card_value:
-                    max_card_value = current_card_value
+    def sort(a, b):
+        bigger_hand = PokerWinner.hand_value[a.type] > PokerWinner.hand_value[b.type]
+        same_hand = PokerWinner.hand_value[a.type] == PokerWinner.hand_value[b.type]
 
-            if max_card_value > max_hand_value:
-                max_hand_value = max_card_value
-                max_hand = hand
+        if same_hand:
+            bigger_tie_breaker = PokerWinner.compare_tie_breaker(a.tie_breaker, b.tie_breaker)
+            if bigger_tie_breaker:
+                return -1
+            else:
+                return 1
 
-        return max_hand
-
-    @staticmethod
-    def pair(hands):
-        highest_pair_hand = None
-        highest_pair_value = 0
-        for hand in hands:
-            hand_without_suits = list(map(lambda val: val[:-1], hand[1]))
-            maxCard = max(PokerWinner.find_duplicates(hand_without_suits, 2) or [0])
-            if maxCard > highest_pair_value:
-                highest_pair_value = maxCard
-                highest_pair_hand = hand
-
-        return highest_pair_hand
+        if bigger_hand:
+            return -1
+        else:
+            return 1
 
     @staticmethod
-    def two_pair(hands):
-        highest_pair_hand = None
-        highest_pair_value = 0
-        for hand in hands:
-            hand_without_suits = list(map(lambda val: val[:-1], hand[1]))
-            pairs = PokerWinner.find_duplicates(hand_without_suits, 2)
-            maxCard = max(pairs or [0])
-            if maxCard > highest_pair_value and len(pairs) == 2:
-                highest_pair_value = maxCard
-                highest_pair_hand = hand
-
-        return highest_pair_hand
+    def compare_tie_breaker(a, b, index=0):
+        if a[index] == b[index]:
+            return PokerWinner.compare_tie_breaker(a, b, index + 1)
+        else:
+            return a[index] > b[index]
 
     @staticmethod
-    def find_duplicates(numbers, numberOfDups):
+    def parse_hands(hand):
+        result = PokerWinner.two_pair(hand)
+        if result is None:
+            result = PokerWinner.pair(hand)
+        if result is None:
+            result = PokerWinner.high_card(hand)
+        return result
+
+    @staticmethod
+    def high_card(hand):
+        cards = PokerWinner.get_cards(hand)
+        tie_breaker = sorted(cards, reverse=True)
+        tie_breaker.pop()
+        return Result('high_card', hand, tie_breaker)
+
+    @staticmethod
+    def pair(hand):
+        hand_without_suits = PokerWinner.get_cards(hand)
+        pair = PokerWinner.find_duplicates(hand_without_suits, 2)
+
+        if pair:
+            pair.sort()
+            tie_breakers = [x for x in hand_without_suits if x not in pair]
+            tie_breakers.sort(reverse=True)
+            pair.extend(tie_breakers)
+            return Result('pair', hand, pair)
+        else:
+            return None
+
+    @staticmethod
+    def two_pair(hand):
+        hand_without_suits = PokerWinner.get_cards(hand)
+        pairs = PokerWinner.find_duplicates(hand_without_suits, 2)
+
+        if pairs and len(pairs) == 2:
+            pairs.sort(reverse=True)
+            tie_breakers = [x for x in hand_without_suits if x not in pairs]
+            tie_breakers.sort(reverse=True)
+            pairs.extend(tie_breakers)
+            return Result('two_pair', hand, pairs)
+        else:
+            return None
+
+    @staticmethod
+    def find_duplicates(numbers, number_of_dups):
         duplicateNumbers = []
-        for x in PokerWinner.card_values.keys():
+        for x in PokerWinner.card_values.values():
             duplicateCount = numbers.count(x)
-            if duplicateCount == numberOfDups:
-                duplicateNumbers.append(PokerWinner.card_values[x])
+            if duplicateCount == number_of_dups:
+                duplicateNumbers.append(x)
         return duplicateNumbers
+
+    @staticmethod
+    def get_cards(hand):
+        return list(map(lambda x: PokerWinner.card_values[x[:-1]], hand[1]))
