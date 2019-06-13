@@ -27,3 +27,15 @@ class MyTest(unittest.TestCase):
         zaks_hand = ('Zak', ['QS', '2H', 'AH', 'JC', 'QH'])
         jons_hand = ('Jon', ['KS', 'KH', '3H', 'JC', '8S'])
         self.assertEqual(PokerWinner.find_winning_hand(subject, [zaks_hand, jons_hand]), 'Jon')
+
+    def test_two_pair_beats_pair(self):
+        subject = PokerWinner()
+        zaks_hand = ('Zak', ['QS', '2H', '7H', '2D', 'QH'])
+        jons_hand = ('Jon', ['KS', 'KH', '3H', 'AC', '8S'])
+        self.assertEqual(PokerWinner.find_winning_hand(subject, [zaks_hand, jons_hand]), 'Zak')
+
+    def test_two_pair_beats_lower_two_pair(self):
+        subject = PokerWinner()
+        zaks_hand = ('Zak', ['QS', 'QH', '7H', '4D', '4H'])
+        jons_hand = ('Jon', ['KS', 'KH', '3H', '3C', '8S'])
+        self.assertEqual(PokerWinner.find_winning_hand(subject, [zaks_hand, jons_hand]), 'Jon')

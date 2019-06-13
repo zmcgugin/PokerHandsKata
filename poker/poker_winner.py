@@ -19,7 +19,9 @@ class PokerWinner:
     }
 
     def find_winning_hand(self, hands):
-        winning_hand = PokerWinner.pair(hands)
+        winning_hand = PokerWinner.two_pair(hands)
+        if winning_hand is None:
+            winning_hand = PokerWinner.pair(hands)
         if winning_hand is None:
             winning_hand = PokerWinner.high_card(hands)
         return winning_hand[0]
@@ -47,7 +49,7 @@ class PokerWinner:
         highest_pair_value = 0
         for hand in hands:
             hand_without_suits = list(map(lambda val: val[:-1], hand[1]))
-            maxCard = max(PokerWinner.find_duplicates(hand_without_suits, 2))
+            maxCard = max(PokerWinner.find_duplicates(hand_without_suits, 2) or [0])
             if maxCard > highest_pair_value:
                 highest_pair_value = maxCard
                 highest_pair_hand = hand
@@ -55,8 +57,22 @@ class PokerWinner:
         return highest_pair_hand
 
     @staticmethod
+    def two_pair(hands):
+        highest_pair_hand = None
+        highest_pair_value = 0
+        for hand in hands:
+            hand_without_suits = list(map(lambda val: val[:-1], hand[1]))
+            pairs = PokerWinner.find_duplicates(hand_without_suits, 2)
+            maxCard = max(pairs or [0])
+            if maxCard > highest_pair_value and len(pairs) == 2:
+                highest_pair_value = maxCard
+                highest_pair_hand = hand
+
+        return highest_pair_hand
+
+    @staticmethod
     def find_duplicates(numbers, numberOfDups):
-        duplicateNumbers = [0]
+        duplicateNumbers = []
         for x in PokerWinner.card_values.keys():
             duplicateCount = numbers.count(x)
             if duplicateCount == numberOfDups:
