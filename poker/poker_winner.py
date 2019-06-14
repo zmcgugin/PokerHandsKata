@@ -21,12 +21,106 @@ class PokerWinner:
     hand_value = {
         'high_card': 1,
         'pair': 2,
-        'two_pair': 3
+        'two_pair': 3,
+        'three_of_a_kind': 4,
+        'straight': 5
     }
 
     def find_winning_hand(self, hands):
         results = list(map(PokerWinner.parse_hands, hands))
         return sorted(results, key=functools.cmp_to_key(PokerWinner.sort))[0].hand[0]
+
+    @staticmethod
+    def compare_tie_breaker(a, b, index=0):
+        if a[index] == b[index]:
+            return PokerWinner.compare_tie_breaker(a, b, index + 1)
+        else:
+            return a[index] > b[index]
+
+    @staticmethod
+    def parse_hands(hand):
+        result = PokerWinner.straight(hand)
+        if result is None:
+            result = PokerWinner.three_of_a_kind(hand)
+        if result is None:
+            result = PokerWinner.two_pair(hand)
+        if result is None:
+            result = PokerWinner.pair(hand)
+        if result is None:
+            result = PokerWinner.high_card(hand)
+        return result
+
+    @staticmethod
+    def high_card(hand):
+        cards = PokerWinner.get_cards(hand)
+        tie_breaker = sorted(cards, reverse=True)
+        return Result('high_card', hand, tie_breaker)
+
+    @staticmethod
+    def pair(hand):
+        hand_without_suits = PokerWinner.get_cards(hand)
+        pair = PokerWinner.find_duplicates(hand_without_suits, 2)
+
+        if pair:
+            tie_breakers = PokerWinner.create_tie_breaker_list(pair, hand_without_suits)
+            return Result('pair', hand, tie_breakers)
+        else:
+            return None
+
+    @staticmethod
+    def two_pair(hand):
+        hand_without_suits = PokerWinner.get_cards(hand)
+        pairs = PokerWinner.find_duplicates(hand_without_suits, 2)
+
+        if pairs and len(pairs) == 2:
+            tie_breakers = PokerWinner.create_tie_breaker_list(pairs, hand_without_suits)
+            return Result('two_pair', hand, tie_breakers)
+        else:
+            return None
+
+    @staticmethod
+    def three_of_a_kind(hand):
+        hand_without_suits = PokerWinner.get_cards(hand)
+        trips = PokerWinner.find_duplicates(hand_without_suits, 3)
+
+        if trips:
+            tie_breakers = PokerWinner.create_tie_breaker_list(trips, hand_without_suits)
+            return Result('three_of_a_kind', hand, tie_breakers)
+        else:
+            return None
+
+    @staticmethod
+    def straight(hand):
+        hws = sorted(PokerWinner.get_cards(hand))
+        low_ace_straight = hws[0] + 1 == hws[1] and hws[1] + 1 == hws[2] and hws[2] + 1 == hws[3] and hws[4] == 14
+        straight = hws[0] + 1 == hws[1] and hws[1] + 1 == hws[2] and hws[2] + 1 == hws[3] and hws[3] + 1 == hws[4]
+
+        if low_ace_straight or straight:
+            # using number in middle of straight as a tie breaker to avoid low ace's
+            return Result('straight', hand, [hws[2]])
+        else:
+            return None
+
+    @staticmethod
+    def create_tie_breaker_list(main_hand, full_hand):
+        main_hand.sort(reverse=True)
+        kickers = [x for x in full_hand if x not in main_hand]
+        kickers.sort(reverse=True)
+        main_hand.extend(kickers)
+        return main_hand
+
+    @staticmethod
+    def find_duplicates(numbers, number_of_dups):
+        duplicateNumbers = []
+        for x in PokerWinner.card_values.values():
+            duplicateCount = numbers.count(x)
+            if duplicateCount == number_of_dups:
+                duplicateNumbers.append(x)
+        return duplicateNumbers
+
+    @staticmethod
+    def get_cards(hand):
+        return list(map(lambda x: PokerWinner.card_values[x[:-1]], hand[1]))
 
     @staticmethod
     def sort(a, b):
@@ -44,67 +138,3 @@ class PokerWinner:
             return -1
         else:
             return 1
-
-    @staticmethod
-    def compare_tie_breaker(a, b, index=0):
-        if a[index] == b[index]:
-            return PokerWinner.compare_tie_breaker(a, b, index + 1)
-        else:
-            return a[index] > b[index]
-
-    @staticmethod
-    def parse_hands(hand):
-        result = PokerWinner.two_pair(hand)
-        if result is None:
-            result = PokerWinner.pair(hand)
-        if result is None:
-            result = PokerWinner.high_card(hand)
-        return result
-
-    @staticmethod
-    def high_card(hand):
-        cards = PokerWinner.get_cards(hand)
-        tie_breaker = sorted(cards, reverse=True)
-        tie_breaker.pop()
-        return Result('high_card', hand, tie_breaker)
-
-    @staticmethod
-    def pair(hand):
-        hand_without_suits = PokerWinner.get_cards(hand)
-        pair = PokerWinner.find_duplicates(hand_without_suits, 2)
-
-        if pair:
-            pair.sort()
-            tie_breakers = [x for x in hand_without_suits if x not in pair]
-            tie_breakers.sort(reverse=True)
-            pair.extend(tie_breakers)
-            return Result('pair', hand, pair)
-        else:
-            return None
-
-    @staticmethod
-    def two_pair(hand):
-        hand_without_suits = PokerWinner.get_cards(hand)
-        pairs = PokerWinner.find_duplicates(hand_without_suits, 2)
-
-        if pairs and len(pairs) == 2:
-            pairs.sort(reverse=True)
-            tie_breakers = [x for x in hand_without_suits if x not in pairs]
-            tie_breakers.sort(reverse=True)
-            pairs.extend(tie_breakers)
-            return Result('two_pair', hand, pairs)
-        else:
-            return None
-
-    @staticmethod
-    def find_duplicates(numbers, number_of_dups):
-        duplicateNumbers = []
-        for x in PokerWinner.card_values.values():
-            duplicateCount = numbers.count(x)
-            if duplicateCount == number_of_dups:
-                duplicateNumbers.append(x)
-        return duplicateNumbers
-
-    @staticmethod
-    def get_cards(hand):
-        return list(map(lambda x: PokerWinner.card_values[x[:-1]], hand[1]))
