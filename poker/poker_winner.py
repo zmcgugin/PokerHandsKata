@@ -28,7 +28,8 @@ class PokerWinner:
         'straight': 5,
         'flush': 6,
         'full_house': 7,
-        'four_of_a_kind': 8
+        'four_of_a_kind': 8,
+        'straight_flush': 9
     }
 
     def find_winning_hand(self, hands):
@@ -44,7 +45,9 @@ class PokerWinner:
 
     @staticmethod
     def parse_hands(hand):
-        result = PokerWinner.four_of_a_kind(hand)
+        result = PokerWinner.straight_flush(hand)
+        if result is None:
+            result = PokerWinner.four_of_a_kind(hand)
         if result is None:
             result = PokerWinner.full_house(hand)
         if result is None:
@@ -103,10 +106,8 @@ class PokerWinner:
     @staticmethod
     def straight(hand):
         hws = sorted(PokerWinner.get_cards_number_values(hand))
-        low_ace_straight = hws[0] + 1 == hws[1] and hws[1] + 1 == hws[2] and hws[2] + 1 == hws[3] and hws[4] == 14
-        straight = hws[0] + 1 == hws[1] and hws[1] + 1 == hws[2] and hws[2] + 1 == hws[3] and hws[3] + 1 == hws[4]
 
-        if low_ace_straight or straight:
+        if PokerWinner.is_straight(hws):
             # using number in middle of straight as a tie breaker to avoid low ace's
             return Result('straight', hand, [hws[2]])
         else:
@@ -116,7 +117,7 @@ class PokerWinner:
     def flush(hand):
         suits = sorted(PokerWinner.get_cards_suits(hand))
 
-        if suits.count(suits[0]) == 5:
+        if PokerWinner.is_flush(suits):
             return Result('flush', hand, sorted(PokerWinner.get_cards_number_values(hand), reverse=True))
         else:
             return None
@@ -144,6 +145,17 @@ class PokerWinner:
             return None
 
     @staticmethod
+    def straight_flush(hand):
+        hws = sorted(PokerWinner.get_cards_number_values(hand))
+        suits = sorted(PokerWinner.get_cards_suits(hand))
+
+        if PokerWinner.is_straight(hws) and PokerWinner.is_flush(suits):
+            # using number in middle of straight as a tie breaker to avoid low ace's
+            return Result('straight_flush', hand, [hws[2]])
+        else:
+            return None
+
+    @staticmethod
     def create_tie_breaker_list(main_hand, full_hand):
         main_hand.sort(reverse=True)
         kickers = [x for x in full_hand if x not in main_hand]
@@ -167,6 +179,16 @@ class PokerWinner:
     @staticmethod
     def get_cards_suits(hand):
         return list(map(lambda x: x[len(x) - 1], hand[1]))
+
+    @staticmethod
+    def is_straight(hws):
+        low_ace_straight = hws[0] + 1 == hws[1] and hws[1] + 1 == hws[2] and hws[2] + 1 == hws[3] and hws[4] == 14
+        straight = hws[0] + 1 == hws[1] and hws[1] + 1 == hws[2] and hws[2] + 1 == hws[3] and hws[3] + 1 == hws[4]
+        return low_ace_straight or straight
+
+    @staticmethod
+    def is_flush(suits):
+        return suits.count(suits[0]) == 5
 
     @staticmethod
     def sort(a, b):

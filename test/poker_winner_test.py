@@ -84,7 +84,7 @@ class MyTest(unittest.TestCase):
 
     def test_full_house_beats_flush(self):
         subject = PokerWinner()
-        zaks_hand = ('Zak', ['2H', '3H', '4H', '5H', 'AH'])
+        zaks_hand = ('Zak', ['2S', '3H', '4C', '5H', 'AH'])
         jons_hand = ('Jon', ['5S', '5S', '8S', '8S', '8S'])
         self.assertEqual(PokerWinner.find_winning_hand(subject, [zaks_hand, jons_hand]), 'Jon')
 
@@ -105,3 +105,17 @@ class MyTest(unittest.TestCase):
         zaks_hand = ('Zak', ['AS', '8S', '8C', '8D', '8H'])
         jons_hand = ('Jon', ['5S', '2S', '2C', '2D', '2H'])
         self.assertEqual(PokerWinner.find_winning_hand(subject, [zaks_hand, jons_hand]), 'Zak')
+
+    def test_straight_flush_beats_quads(self):
+        subject = PokerWinner()
+        zaks_hand = ('Zak', ['AS', '8S', '8C', '8D', '8H'])
+        jons_hand = ('Jon', ['5S', '6S', '7S', '8S', '9S'])
+        self.assertEqual(PokerWinner.find_winning_hand(subject, [zaks_hand, jons_hand]), 'Jon')
+
+    def test_straight_flush_beats_lower_straight_flush(self):
+        subject = PokerWinner()
+        zaks_hand = ('Zak', ['6S', '7S', '8S', '9S', '10S'])
+        jons_hand = ('Jon', ['5S', '6S', '7S', '8S', '9S'])
+        self.assertEqual(PokerWinner.find_winning_hand(subject, [zaks_hand, jons_hand]), 'Zak')
+
+
