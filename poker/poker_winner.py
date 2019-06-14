@@ -1,7 +1,9 @@
 from poker.result import *
 import functools
 
+
 class PokerWinner:
+
     card_values = {
         '2': 2,
         '3': 3,
@@ -23,7 +25,8 @@ class PokerWinner:
         'pair': 2,
         'two_pair': 3,
         'three_of_a_kind': 4,
-        'straight': 5
+        'straight': 5,
+        'flush': 6
     }
 
     def find_winning_hand(self, hands):
@@ -39,7 +42,9 @@ class PokerWinner:
 
     @staticmethod
     def parse_hands(hand):
-        result = PokerWinner.straight(hand)
+        result = PokerWinner.flush(hand)
+        if result is None:
+            result = PokerWinner.straight(hand)
         if result is None:
             result = PokerWinner.three_of_a_kind(hand)
         if result is None:
@@ -52,13 +57,13 @@ class PokerWinner:
 
     @staticmethod
     def high_card(hand):
-        cards = PokerWinner.get_cards(hand)
+        cards = PokerWinner.get_cards_number_values(hand)
         tie_breaker = sorted(cards, reverse=True)
         return Result('high_card', hand, tie_breaker)
 
     @staticmethod
     def pair(hand):
-        hand_without_suits = PokerWinner.get_cards(hand)
+        hand_without_suits = PokerWinner.get_cards_number_values(hand)
         pair = PokerWinner.find_duplicates(hand_without_suits, 2)
 
         if pair:
@@ -69,7 +74,7 @@ class PokerWinner:
 
     @staticmethod
     def two_pair(hand):
-        hand_without_suits = PokerWinner.get_cards(hand)
+        hand_without_suits = PokerWinner.get_cards_number_values(hand)
         pairs = PokerWinner.find_duplicates(hand_without_suits, 2)
 
         if pairs and len(pairs) == 2:
@@ -80,7 +85,7 @@ class PokerWinner:
 
     @staticmethod
     def three_of_a_kind(hand):
-        hand_without_suits = PokerWinner.get_cards(hand)
+        hand_without_suits = PokerWinner.get_cards_number_values(hand)
         trips = PokerWinner.find_duplicates(hand_without_suits, 3)
 
         if trips:
@@ -91,13 +96,22 @@ class PokerWinner:
 
     @staticmethod
     def straight(hand):
-        hws = sorted(PokerWinner.get_cards(hand))
+        hws = sorted(PokerWinner.get_cards_number_values(hand))
         low_ace_straight = hws[0] + 1 == hws[1] and hws[1] + 1 == hws[2] and hws[2] + 1 == hws[3] and hws[4] == 14
         straight = hws[0] + 1 == hws[1] and hws[1] + 1 == hws[2] and hws[2] + 1 == hws[3] and hws[3] + 1 == hws[4]
 
         if low_ace_straight or straight:
             # using number in middle of straight as a tie breaker to avoid low ace's
             return Result('straight', hand, [hws[2]])
+        else:
+            return None
+
+    @staticmethod
+    def flush(hand):
+        suits = sorted(PokerWinner.get_cards_suits(hand))
+
+        if suits.count(suits[0]) == 5:
+            return Result('flush', hand, sorted(PokerWinner.get_cards_number_values(hand), reverse=True))
         else:
             return None
 
@@ -119,8 +133,12 @@ class PokerWinner:
         return duplicateNumbers
 
     @staticmethod
-    def get_cards(hand):
+    def get_cards_number_values(hand):
         return list(map(lambda x: PokerWinner.card_values[x[:-1]], hand[1]))
+
+    @staticmethod
+    def get_cards_suits(hand):
+        return list(map(lambda x: x[len(x) - 1], hand[1]))
 
     @staticmethod
     def sort(a, b):

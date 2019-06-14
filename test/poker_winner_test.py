@@ -69,3 +69,15 @@ class MyTest(unittest.TestCase):
         zaks_hand = ('Zak', ['6S', '7H', '8C', '9D', '10H'])
         jons_hand = ('Jon', ['7S', '8H', '9C', '10C', 'JS'])
         self.assertEqual(PokerWinner.find_winning_hand(subject, [zaks_hand, jons_hand]), 'Jon')
+
+    def test_flush_can_beat_a_straight(self):
+        subject = PokerWinner()
+        zaks_hand = ('Zak', ['7S', '8H', '9C', '10C', 'JH'])
+        jons_hand = ('Jon', ['5S', '9S', 'JS', '2S', 'AS'])
+        self.assertEqual(PokerWinner.find_winning_hand(subject, [zaks_hand, jons_hand]), 'Jon')
+
+    def test_flush_can_beat_a_smaller_flush(self):
+        subject = PokerWinner()
+        zaks_hand = ('Zak', ['2H', '3H', '4H', '5H', 'AH'])
+        jons_hand = ('Jon', ['5S', '9S', 'JS', '2S', 'KS'])
+        self.assertEqual(PokerWinner.find_winning_hand(subject, [zaks_hand, jons_hand]), 'Zak')
