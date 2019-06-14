@@ -26,7 +26,8 @@ class PokerWinner:
         'two_pair': 3,
         'three_of_a_kind': 4,
         'straight': 5,
-        'flush': 6
+        'flush': 6,
+        'full_house': 7
     }
 
     def find_winning_hand(self, hands):
@@ -42,7 +43,9 @@ class PokerWinner:
 
     @staticmethod
     def parse_hands(hand):
-        result = PokerWinner.flush(hand)
+        result = PokerWinner.full_house(hand)
+        if result is None:
+            result = PokerWinner.flush(hand)
         if result is None:
             result = PokerWinner.straight(hand)
         if result is None:
@@ -112,6 +115,17 @@ class PokerWinner:
 
         if suits.count(suits[0]) == 5:
             return Result('flush', hand, sorted(PokerWinner.get_cards_number_values(hand), reverse=True))
+        else:
+            return None
+
+    @staticmethod
+    def full_house(hand):
+        hand_without_suits = PokerWinner.get_cards_number_values(hand)
+        pair = PokerWinner.find_duplicates(hand_without_suits, 2)
+        trips = PokerWinner.find_duplicates(hand_without_suits, 3)
+
+        if pair and trips:
+            return Result('full_house', hand, [trips[0], pair[0]])
         else:
             return None
 
