@@ -93,3 +93,15 @@ class MyTest(unittest.TestCase):
         zaks_hand = ('Zak', ['AS', 'AS', '7S', '7S', '7S'])
         jons_hand = ('Jon', ['5S', '5S', '8S', '8S', '8S'])
         self.assertEqual(PokerWinner.find_winning_hand(subject, [zaks_hand, jons_hand]), 'Jon')
+
+    def test_four_of_a_kind_beats_full_house(self):
+        subject = PokerWinner()
+        zaks_hand = ('Zak', ['AS', 'AS', '7S', '7S', '7S'])
+        jons_hand = ('Jon', ['5S', '2S', '2C', '2D', '2H'])
+        self.assertEqual(PokerWinner.find_winning_hand(subject, [zaks_hand, jons_hand]), 'Jon')
+
+    def test_four_of_a_kind_beats_lower_four_of_a_kind(self):
+        subject = PokerWinner()
+        zaks_hand = ('Zak', ['AS', '8S', '8C', '8D', '8H'])
+        jons_hand = ('Jon', ['5S', '2S', '2C', '2D', '2H'])
+        self.assertEqual(PokerWinner.find_winning_hand(subject, [zaks_hand, jons_hand]), 'Zak')

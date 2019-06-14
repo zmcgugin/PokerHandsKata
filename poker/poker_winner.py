@@ -27,7 +27,8 @@ class PokerWinner:
         'three_of_a_kind': 4,
         'straight': 5,
         'flush': 6,
-        'full_house': 7
+        'full_house': 7,
+        'four_of_a_kind': 8
     }
 
     def find_winning_hand(self, hands):
@@ -43,7 +44,9 @@ class PokerWinner:
 
     @staticmethod
     def parse_hands(hand):
-        result = PokerWinner.full_house(hand)
+        result = PokerWinner.four_of_a_kind(hand)
+        if result is None:
+            result = PokerWinner.full_house(hand)
         if result is None:
             result = PokerWinner.flush(hand)
         if result is None:
@@ -126,6 +129,17 @@ class PokerWinner:
 
         if pair and trips:
             return Result('full_house', hand, [trips[0], pair[0]])
+        else:
+            return None
+
+    @staticmethod
+    def four_of_a_kind(hand):
+        hand_without_suits = PokerWinner.get_cards_number_values(hand)
+        quads = PokerWinner.find_duplicates(hand_without_suits, 4)
+
+        if quads:
+            tie_breakers = PokerWinner.create_tie_breaker_list(quads, hand_without_suits)
+            return Result('four_of_a_kind', hand, tie_breakers)
         else:
             return None
 
